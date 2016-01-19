@@ -1,8 +1,8 @@
 
-TDB.Init(Test);
+PDB.Init(Test);
 
 function Test(){
-    test = TDB.Select("test");
+    test = PDB.Select("test");
 
     var te = 1000000;
 

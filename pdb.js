@@ -1,5 +1,5 @@
 
-var TDB = new function(){
+var PDB = new function(){
     var ready = 0;
     var IP;
     var conf;
@@ -10,7 +10,7 @@ var TDB = new function(){
     var evt = document.getElementsByTagName("body")[0];
 
     var _init = function(cb){
-        //_onEvent("TDB_READY",function(){_start(cb)});
+        //_onEvent("PDB_READY",function(){_start(cb)});
         _start(cb);
         //_getIP();
         //_getConf();
@@ -34,7 +34,7 @@ var TDB = new function(){
     var _createCollection = function(c){
         _collections.push(new _linkedList());
         _cindex[c] = _collections.length - 1;
-        console.log("TDB: Collection "+c+" created");
+        console.log("PDB: Collection "+c+" created");
     }
 
     var _login = function(admin, password){
@@ -49,7 +49,7 @@ var TDB = new function(){
             if(typeof IP == "string"){
                 console.log("Connection from ",IP);
                 ready++;
-                if(ready == 2) _triggerEvent("TDB_READY");
+                if(ready == 2) _triggerEvent("PDB_READY");
             }else{
                 _raiseError("IP_NOT_RETRIEVED");
             }
@@ -57,12 +57,12 @@ var TDB = new function(){
     }
 
     var _getConf = function(){
-        AJAX("tdbconf.json", function(data){
+        AJAX("pdbconf.json", function(data){
             conf = JSON.parse(data.responseText);
             if(typeof conf == "object"){
                 console.log("Configuration file loaded");
                 ready++;
-                if(ready == 2) _triggerEvent("TDB_READY");
+                if(ready == 2) _triggerEvent("PDB_READY");
             }else{
                 _raiseError("CONFIGURATION_NOT_FOUND");
             }
@@ -75,7 +75,7 @@ var TDB = new function(){
     function _triggerEvent(name,d){
         if(typeof d != "object") d = {};
         var ev = document.createEvent("Event");
-        ev.initEvent("TDB_READY", true, true);
+        ev.initEvent("PDB_READY", true, true);
         ev.data = d;
         evt.dispatchEvent(ev);
     }
@@ -121,7 +121,8 @@ var TDB = new function(){
         var lnode = false;
 
         var _push = function(data){
-            lnode = new _node(_getEntryToken(data),data,lnode);
+            var d = (typeof data == "object")? JSON.stringify(data) : data;
+            lnode = new _node(_getEntryToken(d),d,lnode);
         }
 
         var _node = function(id,data,next){
