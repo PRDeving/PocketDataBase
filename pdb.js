@@ -121,18 +121,22 @@ var PDB = new function(){
         var lnode = false;
 
         var _push = function(data){
-            var d = (typeof data == "object")? JSON.stringify(data) : data;
-            lnode = new _node(_getEntryToken(d),d,lnode);
+            lnode = new _node(data,lnode);
         }
 
-        var _node = function(id,data,next){
-            var _update = function(d){
-                this.id = _getEntryToken(d);
-                this.data = d;
+        var _node = function(data,next){
+            var _update = function(data){
+                var d = (typeof data == "object")? JSON.stringify(data) : false;
+                // this.id = _getEntryToken(d);
+                this.data = data;
+                this.raw = d
             }
 
-            this.id = id || "";
+            var d = (typeof data == "object")? JSON.stringify(data) : false;
+
+            // this.id = _getEntryToken(d) || "";
             this.data = data || "";
+            this.raw = d;
             this.next = next || false;
             this.update = _update;
         }
@@ -147,19 +151,55 @@ var PDB = new function(){
             }
         }
 
-        var _search = function(d){
-            if(typeof d == "number") return _findByIterator(d);
-
-            var id = _getEntryToken(d);
+        var _searchWhere = function(filter){
             var cn = lnode;
             var f = [];
             while(cn){
-                //     if(!window.aasd)console.log(id, cn.id);
-                //         window.aasd = true;
-                // if(new RegExp(cn.id).test(id)){
-                //     f.push(cn);
-                // }else if(new RegExp(d.substr(0,30)).test(cn.data)){
-                if(new RegExp(d.substr(0,30)).test(cn.data)){
+                if(typeof cn.data !== "object") break;
+
+                var match = (function(){
+                    for(var fil in filter){
+                        if(!cn.data[fil]) return false;
+                        if(filter[fil] !== cn.data[fil]) return false;
+                    };
+                    return true;
+                })();
+
+                if(match) f.push(cn);
+                cn = cn.next;
+            }
+            return f;
+        }
+
+        var _searchFirstWhere = function(filter){
+            var cn = lnode;
+            while(cn){
+                if(typeof cn.data !== "object") break;
+
+                var match = (function(){
+                    for(var fil in filter){
+                        if(!cn.data[fil]) return false;
+                        if(filter[fil] !== cn.data[fil]) return false;
+                    };
+                    return true;
+                })();
+
+                if(match) return cn;
+                cn = cn.next;
+            }
+            return f;
+        }
+
+        var _search = function(d){
+            if(typeof d == "number") return _findByIterator(d);
+            if(typeof d == "object") return _findWhere(d);
+
+            var cn = lnode;
+            var f = [];
+
+            while(cn){
+                var data = (!cn.raw)? cn.data : cn.raw;
+                if(data.indexOf(d) >= 0){
                     f.push(cn);
                 }
                 cn = cn.next;
@@ -169,16 +209,14 @@ var PDB = new function(){
 
         var _searchFirst = function(d){
             if(typeof d == "number") return _findByIterator(d);
+            if(typeof d == "object") return _findFirstWhere(d);
 
-            var id = _getEntryToken(d);
             var cn = lnode;
             while(cn){
-                //     if(!window.aasd)console.log(id, cn.id);
-                //         window.aasd = true;
-                // if(new RegExp(cn.id).test(id)){
-                //     f.push(cn);
-                // }else if(new RegExp(d.substr(0,30)).test(cn.data)){
-                if(new RegExp(d.substr(0,30)).test(cn.data)){
+                var data = (!cn.raw)? cn.data : cn.raw;
+                
+                // if(new RegExp(d).test(cn.data)){
+                if(data.indexOf(d) >= 0){
                    return cn;
                 }
                 cn = cn.next;
@@ -198,6 +236,8 @@ var PDB = new function(){
         this.Save = _push;
         this.Search = _search;
         this.SearchFirst = _searchFirst;
+        this.SearchFirstWhere = _searchFirstWhere;
+        this.SearchWhere = _searchWhere;
         this.FindByIterator = _findByIterator;
         this.__defineGetter__("data",function(){return {numberOfNodes: n, lastIn: lnode}; });
     }
