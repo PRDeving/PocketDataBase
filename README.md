@@ -19,6 +19,15 @@ Actually, in his first version, PDB does:
 
 (tested in a I7 laptop and google chrome)
 
+#PocketDataBase in numbers
+|   Test        |   PocketDataBase  |   MySQL   |   MongoDB |
+=============================================
+|   1M Inserts   |   2.5 s  |   49 s    |   23s     |
+|   1M Filtered by content queries |   0.13 s  |   Not Allowed    |   Not Allowed   |
+|   1M Filtered by "Where" queries |    0.11 s  |   63  s   |   113 s   |
+|   Export 1M entries DB    |   13 s    |   24  s   |   Not Tested  |
+|   Import 1M entreies DB   |   1.23 s  |   30  s   |   Not Tested  |
+
 # How does it work
 PDB uses collections, something similar to "tables" in SQL, there you can store your info in entries, that are stored in a one-way linked list that gives you the fastest iteration possible, this allows PDB to have a match in a huge database faster than other serverside systems.
 

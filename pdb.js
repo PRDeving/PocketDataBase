@@ -1,25 +1,20 @@
-
 var PDB = new function(){
-    var ready = 0;
-    var IP;
     var conf;
-
     var _collections = [];
     var _cindex = {};
+
+    var TT = new TinyText();
 
     var evt = document.getElementsByTagName("body")[0];
 
     var _init = function(cb){
-        //_onEvent("PDB_READY",function(){_start(cb)});
-        _start(cb);
-        //_getIP();
-        //_getConf();
+        _onEvent("PDB_READY",function(){_start(cb)});
+        _triggerEvent("PDB_READY");
     }
 
     var _start = function(cb){
         console.log("STARTING");
-
-        cb();
+        if(cb) cb();
     }
 
     var _getEntryToken = function(d){
@@ -32,63 +27,21 @@ var PDB = new function(){
     }
 
     var _createCollection = function(c){
-        _collections.push(new _linkedList());
+        _collections.push(new _linkedList(c));
         _cindex[c] = _collections.length - 1;
         console.log("PDB: Collection "+c+" created");
-    }
-
-    var _login = function(admin, password){
-        var at = conf.adminToken;
-        var et = _encriptToToken(admin,password);
-        return (at==et)? true : false;
-    }
-
-    var _getIP = function(){
-        AJAX("http://jsonip.com?callback=?", function(data){
-            IP = JSON.parse(data.responseText.replace(")","").replace("?(","")).ip;
-            if(typeof IP == "string"){
-                console.log("Connection from ",IP);
-                ready++;
-                if(ready == 2) _triggerEvent("PDB_READY");
-            }else{
-                _raiseError("IP_NOT_RETRIEVED");
-            }
-        })
-    }
-
-    var _getConf = function(){
-        AJAX("pdbconf.json", function(data){
-            conf = JSON.parse(data.responseText);
-            if(typeof conf == "object"){
-                console.log("Configuration file loaded");
-                ready++;
-                if(ready == 2) _triggerEvent("PDB_READY");
-            }else{
-                _raiseError("CONFIGURATION_NOT_FOUND");
-            }
-        },true);
     }
 
     function _onEvent(name,cb){
         evt.addEventListener(name,function(d){cb(d)});
     }
+
     function _triggerEvent(name,d){
         if(typeof d != "object") d = {};
         var ev = document.createEvent("Event");
         ev.initEvent("PDB_READY", true, true);
         ev.data = d;
         evt.dispatchEvent(ev);
-    }
-
-    function _genAdminToken(){
-        // var token = 
-    }
-
-    function _encriptToToken(admin, password){
-        var str = encrypt((admin+IP+password).split("").sort().toString().replace(/,/g, ""));
-        console.log(str);
-
-        return str;
     }
 
     function AJAX(url,cb,nll){
@@ -104,21 +57,17 @@ var PDB = new function(){
         return false;
     }
 
-    function encrypt(str) {var rotate_left = function(n, s) {var t4 = (n << s) | (n >>> (32 - s));return t4;};var cvt_hex = function(val) {var str = '';var i;var v;for (i = 7; i >= 0; i--) {v = (val >>> (i * 4)) & 0x0f;str += v.toString(16);}return str;};var blockstart;var i, j;var W = new Array(80);var H0 = 0x67452301;var H1 = 0xEFCDAB89;var H2 = 0x98BADCFE;var H3 = 0x10325476;var H4 = 0xC3D2E1F0;var A, B, C, D, E;var temp;str = unescape(encodeURIComponent(str));var str_len = str.length;var word_array = [];for (i = 0; i < str_len - 3; i += 4) {j = str.charCodeAt(i) << 24 | str.charCodeAt(i + 1) << 16 | str.charCodeAt(i + 2) << 8 | str.charCodeAt(i + 3);word_array.push(j);}switch (str_len % 4) {case 0:i = 0x080000000;break;case 1:i = str.charCodeAt(str_len - 1) << 24 | 0x0800000;break;case 2:i = str.charCodeAt(str_len - 2) << 24 | str.charCodeAt(str_len - 1) << 16 | 0x08000;break;case 3:i = str.charCodeAt(str_len - 3) << 24 | str.charCodeAt(str_len - 2) << 16 | str.charCodeAt(str_len - 1) <<8 | 0x80;break;}word_array.push(i);while ((word_array.length % 16) != 14) {word_array.push(0);}word_array.push(str_len >>> 29);word_array.push((str_len << 3) & 0x0ffffffff);for (blockstart = 0; blockstart < word_array.length; blockstart += 16) {for (i = 0; i < 16; i++) {W[i] = word_array[blockstart + i];}for (i = 16; i <= 79; i++) {W[i] = rotate_left(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);}A = H0;B = H1;C = H2;D = H3;E = H4;for (i = 0; i <= 19; i++) {temp = (rotate_left(A, 5) + ((B & C) | (~B & D)) + E + W[i] + 0x5A827999) & 0x0ffffffff;E = D;D = C;C = rotate_left(B, 30);B = A;A = temp;}for (i = 20; i <= 39; i++) {temp = (rotate_left(A, 5) + (B ^ C ^ D) + E + W[i] + 0x6ED9EBA1) & 0x0ffffffff;E = D;D = C;C = rotate_left(B, 30);B = A;A = temp;}for (i = 40; i <= 59; i++) {temp = (rotate_left(A, 5) + ((B & C) | (B & D) | (C & D)) + E + W[i] + 0x8F1BBCDC) & 0x0ffffffff;E = D;D = C;C = rotate_left(B, 30);B = A;A = temp;}for (i = 60; i <= 79; i++) {temp = (rotate_left(A, 5) + (B ^ C ^ D) + E + W[i] + 0xCA62C1D6) & 0x0ffffffff;E = D;D = C;C = rotate_left(B, 30);B = A;A = temp;}H0 = (H0 + A) & 0x0ffffffff;H1 = (H1 + B) & 0x0ffffffff;H2 = (H2 + C) & 0x0ffffffff;H3 = (H3 + D) & 0x0ffffffff;H4 = (H4 + E) & 0x0ffffffff;}temp = cvt_hex(H0) + cvt_hex(H1) + cvt_hex(H2) + cvt_hex(H3) + cvt_hex(H4);return temp.toLowerCase();}
-
-    function _raiseError(id){
+    function _raiseError(id,data){
         switch(id){
-            case "IP_NOT_RETRIEVED":
-                console.log("Error: IP could not be retrieved");
-            break;
-            case "CONFIGURATION_NOT_FOUND":
-                console.log("Error: There's no configuration file");
+            case "EXPORT_FAILURE":
+                console.log("ERROR:",id,data);
             break;
         }
     }
 
-    var _linkedList = function(){
+    var _linkedList = function(colection){
         var lnode = false;
+        var colection;
 
         var _push = function(data){
             lnode = new _node(data,lnode);
@@ -233,20 +182,61 @@ var PDB = new function(){
             return f;
         }
 
+        var _export = function(toFile){
+            var cd = [];
+            var cn = lnode;
+            var init = Date.now();
+            console.log("PDB: Exporting, be patient, this could last several seconds...");
+            while(cn){
+                cd.push((!cn.raw)?cn.data:cn.raw);
+                cn = cn.next;
+            }
+            
+            try {
+                localStorage.setItem("PDBDB_"+colection,TT.compress(cd.join("|")));
+            } catch(e){
+                _raiseError("EXPORT_FAILURE",e);
+                return false;
+            }
+            console.log("PDB: Database exported to LocalStorage successfully in",
+            (Date.now()-init)/1000,"seconds");
+        }
+
+        var _import = function(c){
+            var init = Date.now();
+            console.log("PDB: Importing, be patient, this could last several seconds...");
+
+            var rawdata = localStorage.getItem("PDBDB_"+c);
+            if(!rawdata) return false;
+
+            var cd = TT.decompress(rawdata).split("|");
+            for(var e in cd) _push((cd[e][0] != "{" && cd[e][0] != "[")?cd[e] : JSON.parse(cd[e]));
+            console.log("PDB: Database imported from LocalStorage successfully in",
+            (Date.now()-init)/1000,"seconds");
+        }
+
         this.Save = _push;
         this.Search = _search;
         this.SearchFirst = _searchFirst;
         this.SearchFirstWhere = _searchFirstWhere;
         this.SearchWhere = _searchWhere;
         this.FindByIterator = _findByIterator;
-        this.__defineGetter__("data",function(){return {numberOfNodes: n, lastIn: lnode}; });
+        this.Export = _export;
+        this.Import = _import;
+        this.__defineGetter__("data",function(){return {lastIn: lnode}; });
+        this.__defineGetter__("length",function(){var c = 0; var cn = lnode; while(cn){c++;cn = cn.next};return c});
     }
 
 
 
     this.Init = _init;
-    this.Login = _login;
-    // this.Save = _save;
     this.Select = _selectCollection;
-    // this.Search = _search;
+    // this.TinyText = new TinyText();
+
+
+
+
+
+
+    function TinyText(){var o=String.fromCharCode,r={implode:function(o){for(var t=r.compress(o),e=new Uint8Array(2*t.length),n=0,i=t.length;i>n;n++){var s=t.charCodeAt(n);e[2*n]=s>>>8,e[2*n+1]=s%256}return e},explode:function(t){if(null===t||void 0===t)return r.decompress(t);for(var e=new Array(t.length/2),n=0,i=e.length;i>n;n++)e[n]=256*t[2*n]+t[2*n+1];var s=[];return e.forEach(function(r){s.push(o(r))}),r.decompress(s.join(""))},compress:function(t){return r._compress(t,16,function(r){return o(r)})},_compress:function(o,r,t){if(null==o)return"";var e,n,i,s={},p={},a="",h="",c="",f=2,l=3,u=2,d=[],v=0,w=0;for(i=0;i<o.length;i+=1)if(a=o.charAt(i),Object.prototype.hasOwnProperty.call(s,a)||(s[a]=l++,p[a]=!0),h=c+a,Object.prototype.hasOwnProperty.call(s,h))c=h;else{if(Object.prototype.hasOwnProperty.call(p,c)){if(c.charCodeAt(0)<256){for(e=0;u>e;e++)v<<=1,w==r-1?(w=0,d.push(t(v)),v=0):w++;for(n=c.charCodeAt(0),e=0;8>e;e++)v=v<<1|1&n,w==r-1?(w=0,d.push(t(v)),v=0):w++,n>>=1}else{for(n=1,e=0;u>e;e++)v=v<<1|n,w==r-1?(w=0,d.push(t(v)),v=0):w++,n=0;for(n=c.charCodeAt(0),e=0;16>e;e++)v=v<<1|1&n,w==r-1?(w=0,d.push(t(v)),v=0):w++,n>>=1}f--,0==f&&(f=Math.pow(2,u),u++),delete p[c]}else for(n=s[c],e=0;u>e;e++)v=v<<1|1&n,w==r-1?(w=0,d.push(t(v)),v=0):w++,n>>=1;f--,0==f&&(f=Math.pow(2,u),u++),s[h]=l++,c=String(a)}if(""!==c){if(Object.prototype.hasOwnProperty.call(p,c)){if(c.charCodeAt(0)<256){for(e=0;u>e;e++)v<<=1,w==r-1?(w=0,d.push(t(v)),v=0):w++;for(n=c.charCodeAt(0),e=0;8>e;e++)v=v<<1|1&n,w==r-1?(w=0,d.push(t(v)),v=0):w++,n>>=1}else{for(n=1,e=0;u>e;e++)v=v<<1|n,w==r-1?(w=0,d.push(t(v)),v=0):w++,n=0;for(n=c.charCodeAt(0),e=0;16>e;e++)v=v<<1|1&n,w==r-1?(w=0,d.push(t(v)),v=0):w++,n>>=1}f--,0==f&&(f=Math.pow(2,u),u++),delete p[c]}else for(n=s[c],e=0;u>e;e++)v=v<<1|1&n,w==r-1?(w=0,d.push(t(v)),v=0):w++,n>>=1;f--,0==f&&(f=Math.pow(2,u),u++)}for(n=2,e=0;u>e;e++)v=v<<1|1&n,w==r-1?(w=0,d.push(t(v)),v=0):w++,n>>=1;for(;;){if(v<<=1,w==r-1){d.push(t(v));break}w++}return d.join("")},decompress:function(o){return null==o?"":""==o?null:r._decompress(o.length,32768,function(r){return o.charCodeAt(r)})},_decompress:function(r,t,e){var n,i,s,p,a,h,c,f,l=[],u=4,d=4,v=3,w="",A=[],m={val:e(0),position:t,index:1};for(i=0;3>i;i+=1)l[i]=i;for(p=0,h=Math.pow(2,2),c=1;c!=h;)a=m.val&m.position,m.position>>=1,0==m.position&&(m.position=t,m.val=e(m.index++)),p|=(a>0?1:0)*c,c<<=1;switch(n=p){case 0:for(p=0,h=Math.pow(2,8),c=1;c!=h;)a=m.val&m.position,m.position>>=1,0==m.position&&(m.position=t,m.val=e(m.index++)),p|=(a>0?1:0)*c,c<<=1;f=o(p);break;case 1:for(p=0,h=Math.pow(2,16),c=1;c!=h;)a=m.val&m.position,m.position>>=1,0==m.position&&(m.position=t,m.val=e(m.index++)),p|=(a>0?1:0)*c,c<<=1;f=o(p);break;case 2:return""}for(l[3]=f,s=f,A.push(f);;){if(m.index>r)return"";for(p=0,h=Math.pow(2,v),c=1;c!=h;)a=m.val&m.position,m.position>>=1,0==m.position&&(m.position=t,m.val=e(m.index++)),p|=(a>0?1:0)*c,c<<=1;switch(f=p){case 0:for(p=0,h=Math.pow(2,8),c=1;c!=h;)a=m.val&m.position,m.position>>=1,0==m.position&&(m.position=t,m.val=e(m.index++)),p|=(a>0?1:0)*c,c<<=1;l[d++]=o(p),f=d-1,u--;break;case 1:for(p=0,h=Math.pow(2,16),c=1;c!=h;)a=m.val&m.position,m.position>>=1,0==m.position&&(m.position=t,m.val=e(m.index++)),p|=(a>0?1:0)*c,c<<=1;l[d++]=o(p),f=d-1,u--;break;case 2:return A.join("")}if(0==u&&(u=Math.pow(2,v),v++),l[f])w=l[f];else{if(f!==d)return null;w=s+s.charAt(0)}A.push(w),l[d++]=s+w.charAt(0),u--,s=w,0==u&&(u=Math.pow(2,v),v++)}}};return r};
 };
