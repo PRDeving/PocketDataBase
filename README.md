@@ -16,6 +16,7 @@ Actually, in his first version, PDB does:
 -	1.000.000 new entries in 1.02 seconds.
 -	1.000.000 iterations to multi-match a query in 0.476 seconds.
 -	a single match query in a 1.000.000 entries database in 0.126 seconds.
+
 ##UPDATED
 -   1.000.000 new entries in 2.501 seconds.
 -   1.000.000 iterations to multi-match a "search for content" query in 0.21 seconds
